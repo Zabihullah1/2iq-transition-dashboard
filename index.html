@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2iQ AI Transition Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f0f2f5;--card:#fff;--accent:#1a56db;--accent-light:#e8effd;--danger:#dc2626;--danger-light:#fef2f2;--danger-border:#fecaca;--success:#059669;--success-light:#ecfdf5;--warn:#d97706;--warn-light:#fffbeb;--text:#1f2937;--text-mid:#4b5563;--text-light:#9ca3af;--border:#e5e7eb;--font:'DM Sans','Segoe UI',system-ui,sans-serif}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13px;line-height:1.5}
+::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#c1c7cf;border-radius:3px}
+
+/* LOGIN */
+.login-overlay{position:fixed;inset:0;background:linear-gradient(135deg,#0f2440 0%,#1a3f6f 50%,#1a56db 100%);display:flex;align-items:center;justify-content:center;z-index:10000}
+.login-box{background:#fff;border-radius:16px;padding:40px;width:380px;max-width:90vw;box-shadow:0 20px 60px rgba(0,0,0,0.3)}
+.login-box h1{font-size:22px;font-weight:800;margin-bottom:4px;letter-spacing:-0.03em}
+.login-box .sub{color:var(--text-light);font-size:13px;margin-bottom:24px}
+.login-box label{display:block;font-size:12px;font-weight:600;color:var(--text-mid);margin-bottom:4px;margin-top:14px}
+.login-box input{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-family:var(--font);font-size:14px;outline:none;transition:border-color 0.2s}
+.login-box input:focus{border-color:var(--accent)}
+.login-btn{width:100%;padding:12px;border:none;border-radius:8px;background:var(--accent);color:#fff;font-family:var(--font);font-size:14px;font-weight:700;cursor:pointer;margin-top:20px;transition:background 0.2s}
+.login-btn:hover{background:#1648b8}
+.login-error{color:var(--danger);font-size:12px;margin-top:8px;text-align:center;min-height:18px}
+
+/* HEADER */
+.header{background:linear-gradient(135deg,#0f2440 0%,#1a3f6f 50%,#1a56db 100%);padding:16px 28px 0;color:#fff;position:sticky;top:0;z-index:100}
+.header-top{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px}
+.header h1{font-size:20px;font-weight:800;letter-spacing:-0.03em}
+.subtitle{font-size:12px;opacity:0.7;margin-top:2px}
+.header-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.sync-status{font-size:11px;padding:5px 12px;border-radius:8px;display:flex;align-items:center;gap:5px}
+.sync-ok{background:rgba(5,150,105,0.2);color:#6ee7b7}
+.sync-err{background:rgba(220,38,38,0.2);color:#fca5a5}
+.sync-pending{background:rgba(217,119,6,0.2);color:#fcd34d}
+.hdr-btn{font-family:var(--font);font-size:11px;font-weight:600;padding:7px 14px;border-radius:8px;border:1.5px solid rgba(255,255,255,0.25);background:rgba(255,255,255,0.08);color:#fff;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:5px;white-space:nowrap}
+.hdr-btn:hover{background:rgba(255,255,255,0.18);border-color:rgba(255,255,255,0.5)}
+.user-badge{font-size:11px;font-weight:600;padding:5px 12px;border-radius:20px;background:rgba(255,255,255,0.15);color:#fff;display:flex;align-items:center;gap:5px}
+
+/* TABS */
+.tabs{display:flex;gap:2px;margin-top:14px;overflow-x:auto}
+.tab{font-family:var(--font);font-size:12px;font-weight:500;padding:9px 16px;border:none;cursor:pointer;background:transparent;color:rgba(255,255,255,0.55);border-radius:10px 10px 0 0;transition:all 0.2s;white-space:nowrap}
+.tab:hover{color:rgba(255,255,255,0.85);background:rgba(255,255,255,0.06)}
+.tab.active{color:var(--text);background:var(--bg);font-weight:700}
+
+/* MAIN */
+.main{padding:20px 28px 40px;max-width:1280px;margin:0 auto}
+
+/* CARDS */
+.card{background:var(--card);border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,0.06);border:1px solid var(--border);overflow:hidden}
+.card-header{padding:14px 18px;border-bottom:1px solid var(--border);background:#f8fafc;display:flex;justify-content:space-between;align-items:center}
+.card-header h3{font-size:14px;font-weight:700;margin:0}
+.card-body{padding:18px}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px}
+.stat-card{background:var(--card);border-radius:12px;padding:18px;text-align:center;border:1px solid var(--border);box-shadow:0 1px 3px rgba(0,0,0,0.06);transition:transform 0.2s,box-shadow 0.2s}
+.stat-card:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,0.1)}
+.stat-value{font-size:30px;font-weight:800;letter-spacing:-0.03em}
+.stat-label{font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-light);margin-top:2px;font-weight:600}
+
+/* TABLES */
+table{width:100%;border-collapse:collapse}
+th{padding:10px 14px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-light);font-weight:600;border-bottom:2px solid var(--border)}
+td{padding:10px 14px;border-bottom:1px solid var(--border)}
+tr.clickable{cursor:pointer;transition:background 0.15s}
+tr.clickable:hover{background:var(--accent-light)}
+tr.key-row{background:var(--success-light)}
+
+/* BADGES */
+.badge{font-size:10px;font-weight:700;padding:3px 10px;border-radius:12px;display:inline-block;white-space:nowrap}
+.badge-off{background:var(--danger);color:#fff}.badge-high{background:var(--success-light);color:var(--success)}
+.badge-medium{background:var(--warn-light);color:var(--warn)}.badge-done{background:var(--accent-light);color:var(--accent)}
+.badge-p1{background:#fef2f2;color:var(--danger)}.badge-p2{background:#fff7ed;color:var(--warn)}.badge-p3{background:#f9fafb;color:var(--text-light)}
+
+/* PROJECT TABS */
+.proj-tabs{display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap}
+.proj-tab{font-family:var(--font);font-size:12px;font-weight:500;padding:7px 16px;border-radius:20px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;transition:all 0.2s;white-space:nowrap}
+.proj-tab:hover{border-color:var(--accent);color:var(--accent)}
+.proj-tab.active{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:700}
+
+/* INFO */
+.info-panel{padding:18px}
+.info-panel h2{font-size:18px;font-weight:700;margin-bottom:8px}
+
+/* GROUPS */
+.group-header{padding:12px 18px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.15s;user-select:none}
+.group-header:hover,.group-header.open{background:#f1f5f9}
+.group-body{padding:8px 18px 18px}
+
+/* TASKS */
+.task-item{border:1px solid var(--border);border-radius:10px;padding:14px;margin-top:8px;transition:all 0.2s}
+.task-item.off{background:var(--danger-light);border-color:var(--danger-border)}
+.task-row{display:flex;align-items:flex-start;gap:10px}
+.task-toggle{width:24px;height:24px;border-radius:6px;border:2px solid var(--border);background:#fff;color:#fff;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;transition:all 0.15s;margin-top:1px}
+.task-toggle.off{background:var(--danger);border-color:var(--danger)}
+.task-toggle:hover{border-color:var(--danger)}
+.task-name{font-weight:600;font-size:13px}.task-name.off{text-decoration:line-through;color:var(--text-light)}
+.task-desc{color:var(--text-mid);font-size:12px;margin-top:2px}
+.task-risk{color:var(--danger);font-size:12px;margin-top:2px}
+.task-details{margin:10px 0 0 34px;background:#fff;border:1px solid var(--danger-border);border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.task-details .field-row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.task-details label{font-size:12px;color:var(--text-mid);font-weight:500;display:flex;align-items:center;gap:6px}
+.task-details input[type="date"],.task-details input[type="text"]{font-family:var(--font);font-size:12px;padding:5px 10px;border-radius:6px;border:1px solid var(--border);outline:none;transition:border-color 0.2s}
+.task-details input:focus,.task-details textarea:focus{border-color:var(--accent)}
+.task-details textarea{font-family:var(--font);font-size:12px;padding:6px 10px;border-radius:6px;border:1px solid var(--border);outline:none;width:100%;resize:vertical;min-height:42px;transition:border-color 0.2s;margin-top:4px}
+select{font-family:var(--font);font-size:12px;padding:5px 10px;border-radius:6px;border:1px solid var(--border);outline:none;background:#fff;cursor:pointer}
+input[type="checkbox"]{width:16px;height:16px;cursor:pointer;accent-color:var(--accent)}
+
+/* ROADMAP */
+.phase{border-left:4px solid;padding:12px 18px;margin-bottom:12px;border-radius:0 8px 8px 0;background:#f8fafc}
+.phase-title{font-weight:700;font-size:14px}.phase-desc{color:var(--text-mid);font-size:12px;margin-top:4px}
+
+/* AUDIT BADGES */
+.audit-off{background:var(--danger-light);color:var(--danger);padding:2px 8px;border-radius:8px;font-size:10px;font-weight:700;white-space:nowrap}
+.audit-restore{background:var(--success-light);color:var(--success);padding:2px 8px;border-radius:8px;font-size:10px;font-weight:700;white-space:nowrap}
+.audit-edit{background:var(--accent-light);color:var(--accent);padding:2px 8px;border-radius:8px;font-size:10px;font-weight:700;white-space:nowrap}
+
+/* TOAST */
+.toast{position:fixed;top:20px;right:20px;z-index:9999;padding:12px 22px;border-radius:10px;font-size:13px;font-weight:500;box-shadow:0 8px 24px rgba(0,0,0,0.2);animation:slideIn 0.3s ease-out}
+.toast-ok{background:#065f46;color:#fff}
+.toast-err{background:var(--danger);color:#fff}
+@keyframes slideIn{from{transform:translateX(40px);opacity:0}to{transform:translateX(0);opacity:1}}
+
+.view-section{display:none}.view-section.active{display:block}
+.table-wrap{overflow-x:auto}
+
+@media(max-width:768px){.header{padding:14px 14px 0}.main{padding:14px}.stats{grid-template-columns:repeat(2,1fr)}.header h1{font-size:17px}}
+</style>
+</head>
+<body>
+<script>
+// ============================================================
+// CONFIG - PASTE YOUR GOOGLE APPS SCRIPT WEB APP URL HERE
+// ============================================================
+const API_URL = 'https://script.google.com/macros/s/AKfycbzi5gW7QpB3uHwuzP_aAJ4V1nYgDQ4uM-jQygM5Y_46UyyApB2DeDuHl5yFQ__MBMmp/exec';
+
+// ============================================================
+// DATA (same as before - no salaries)
+// ============================================================
+const INFO={gruh:{label:'Team GRUH',sum:'Handles insider holdings data for US and Canada.',pain:'Without CIK searches require EDGAR lookup then web search.',insight:'Mian has exceptional ability to spot missing data.'},'10b51':{label:'10B5-1',sum:'Captures SEC Rule 10b5-1 trading plan disclosures — adoption, termination, amendment.',pain:"LLM doesn't assign tags (100% manual). 10% error rate on connections.",insight:'Already 45% AI-assisted. Focus on improving LLM tagging.'},f144:{label:'Form 144',sum:'Form 144 filings — notices of proposed sale of restricted securities. 150-230 filings/day.',pain:'Parent-Child research and Insider-Issuer validation require deep research.',insight:'As-reported feed automated. Curated feed needs manual research.'},fim:{label:'FIM',sum:'Factset Insider Mapping — validates 2iQ insider database against Factset.',pain:'Identity resolution is complex — same name can be different people.',insight:'Detection automatable. Final decisions need human judgment.'},sbb:{label:'SBB',sum:'Share Buyback data from 38 countries. 620 daily filings.',pain:'Factiva: 1,200 headlines daily to find 30-40 intentions.',insight:'10 sources automated. Factiva scanning is prime AI candidate.'},marketing:{label:'Marketing',sum:'Content creation for 2iQ and CapitolTrades.',pain:'Finding blog-worthy trades takes most time.',insight:'Trade spotting highly automatable.'},ct:{label:'CapitolTrades',sum:'US politician stock trades.',pain:'Website occasionally breaks without alerts.',insight:'Already fully automated.'},ssd:{label:'SSD',sum:'European Short Disclosure — short selling positions from 18 EU countries.',pain:'Minimal — occasional unmapped issuers.',insight:'Fully automated. Haasin is QA bridge.'}};
+
+const TASKS={gruh:{'Butterfly Screens':[{id:'bs1',name:'Missing holdings Screen',desc:'Identifies insiders who traded but lack holdings post-trade. Search annual reports, then web.',risk:'Missing holdings not flagged. Data gaps persist.'},{id:'bs2',name:'Check_Insider_holdings_USA',desc:'Validates US insider holdings completeness against SEC filings.',risk:'US holdings gaps undetected.'},{id:'bs3',name:'Check_Insider_holdings_CANADA',desc:'Validates Canadian insider holdings against SEDI filings.',risk:'Canadian holdings gaps undetected.'},{id:'bs4',name:'US_INSIDER_H_BLACKLIST_TO_BE_CLONED',desc:'US insider records on blacklist needing cloning.',risk:'Blacklisted insiders not tracked.'},{id:'bs5',name:'US_INSIDER_H_BLACKLIST_MANUAL_CALCULATION',desc:'Manual calculation for blacklisted US insider holdings.',risk:'Blacklist calculations incorrect.'},{id:'bs6',name:'CAN_INSIDER_H_BLACKLIST_MANUAL_CALCULA',desc:'Manual calculation for Canadian blacklisted holdings.',risk:'Canadian blacklist errors.'},{id:'bs7',name:'Form 144 Related Screens',desc:'Screens for Form 144 filings linkage.',risk:'Form 144 linkage issues.'},{id:'bs8',name:'Inactive Screen',desc:'Identifies inactive insider records needing cleanup.',risk:'Inactive records clutter DB.'},{id:'bs9',name:'Without CIK',desc:'Records missing CIK. Check EDGAR first, then web search.',risk:'Records unmapped to SEC.'}],'I-tracking':[{id:'it1',name:'Insider Holdings inbox US/Canada',desc:'Processes incoming holdings filings from SEC and SEDI.',risk:'New filings not processed.'},{id:'it2',name:'Form 144',desc:'Processes Form 144 notices of proposed sale.',risk:'Intent to sell not captured.'},{id:'it3',name:'Matching Companies - Inbox',desc:'Matches incoming companies to database.',risk:'Duplicate companies created.'},{id:'it4',name:'I-Tracking Screening tool',desc:'Filters and prioritizes items for analysts.',risk:'Analyst efficiency drops.'}],'Reports':[{id:'rp1',name:'SCR_MATCHINGEVENTCHECK',desc:'Checks for matching/duplicate events.',risk:'Duplicates slip through.'},{id:'rp2',name:'missing companies report',desc:'Companies in filings but not in database.',risk:'Coverage gaps.'},{id:'rp3',name:'USAInsiderHoldingsCloner',desc:'Clones USA holdings for multi-relationship insiders.',risk:'Incorrect attribution.'},{id:'rp4',name:'Screen for Missing Trade',desc:'Identifies trades missing from database.',risk:'Significant data gaps.'},{id:'rp5',name:'Source Type Statistics Reports',desc:'Statistics on data sources.',risk:'Quality issues undetected.'},{id:'rp6',name:'InsiderHoldingsUSClonerErrorFilings',desc:'Errors from US Holdings Cloner.',risk:'Cloner errors accumulate.'},{id:'rp7',name:'Delegation report',desc:'Tracks delegation of insider authority.',risk:'Delegation tracking lost.'},{id:'rp8',name:'NEWLY ADDED COMPANIES FROM COMPUSTAT',desc:'New companies from Compustat feed.',risk:'New companies not onboarded.'},{id:'rp9',name:'CompaniesNotMatched',desc:'Companies that could not be matched.',risk:'Unmatched queue grows.'},{id:'rp10',name:'SCR_TRANSACTIONSINDELETEDCOMPANIES',desc:'Transactions in deleted companies.',risk:'Orphaned transactions.'}],'Channels':[{id:'ch1',name:'RSS Feed',desc:'Monitors RSS feeds for new filings.',risk:'No feed monitoring.'},{id:'ch2',name:'Check Filling',desc:'Validates filing completeness.',risk:'Incomplete filings enter DB.'},{id:'ch3',name:'Holding Update',desc:'Processes updates to holdings.',risk:'Holdings become stale.'},{id:'ch4',name:'WEEKLY DIGEST',desc:'Weekly summary of activity.',risk:'No weekly monitoring.'},{id:'ch5',name:'Bot-Issue',desc:'Flags bot processing issues.',risk:'Bot failures unnoticed.'},{id:'ch6',name:'Bots-New-sources',desc:'New source integration.',risk:'New sources stall.'}],'Side Tasks':[{id:'st1',name:'Holdings Follow ups',desc:'Complete trades by inputting holdings from notes.',risk:'Incomplete records persist.'},{id:'st2',name:'New Source Research',desc:'Research new data sources.',risk:'Coverage stagnates.'},{id:'st3',name:'Compustat Emails Reply',desc:'Respond to Compustat queries.',risk:'Vendor relationship issues.'},{id:'st4',name:'Checking of all Task',desc:'QA check across all tasks.',risk:'Errors slip through.'}],'Filings Manual Creation':[{id:'fm1',name:'Egypt',desc:'Manual filings for Egyptian market.',risk:'Egypt coverage lost.'},{id:'fm2',name:'Spain',desc:'Manual filings for Spanish market.',risk:'Spain coverage reduced.'},{id:'fm3',name:'Estonia',desc:'Manual filings for Estonian market.',risk:'Estonia coverage lost.'},{id:'fm4',name:'Czech Republic',desc:'Manual filings for Czech market.',risk:'Czech coverage lost.'},{id:'fm5',name:'Bulgaria',desc:'Manual filings for Bulgarian market.',risk:'Bulgaria coverage lost.'},{id:'fm6',name:'Malta',desc:'Manual filings for Maltese market.',risk:'Malta coverage lost.'},{id:'fm7',name:'NSX',desc:'Manual filings for NSX exchange.',risk:'NSX coverage lost.'}],'HoneyComb':[{id:'hc1',name:'Form 144 Mapping',desc:'Maps Form 144 to internal structure.',risk:'Mapping breaks.'},{id:'hc2',name:'Filings remapping',desc:'Remaps when records change.',risk:'Orphaned filings.'},{id:'hc3',name:'IsLegal Property',desc:'Legal property flags.',risk:'Compliance risk.'},{id:'hc4',name:'Properties editors',desc:'Edit various properties.',risk:'Editing blocked.'},{id:'hc5',name:'Suspicious',desc:'Flags suspicious transactions.',risk:'Fraud detection lost.'}]},'10b51':{'Mappings':[{id:'mp1',name:'Issuer Mapping',desc:'Maps issuers via CIK, checks duplicates.',risk:'New issuers not tracked.'},{id:'mp2',name:'Insider Mapping',desc:'Maps insiders, creates parent-child relationships.',risk:'Family links lost.'},{id:'mp3',name:'Security Mapping',desc:'Maps securities from announcements.',risk:'Wrong securities.'},{id:'mp4',name:'Insider Relationship',desc:'Manages parent-child connections.',risk:'Relationships lost.'}],'Quality Gates':[{id:'qg1',name:'Missing Shares Info',desc:'No shares reported.',risk:'Share data gaps.'},{id:'qg2',name:'Transaction Tag',desc:'Apply tags for RSU/PSU/options.',risk:'Untagged transactions.'},{id:'qg3',name:'Transaction type Other',desc:'Reclassify Other transactions.',risk:'Others unresolved.'},{id:'qg4',name:'Transaction type Buy',desc:'Verify rare buy transactions.',risk:'Buys not verified.'},{id:'qg5',name:'Missing Security Breakdown',desc:'Check if breakdown needed.',risk:'Breakdowns missed.'},{id:'qg6',name:'Duplicate Filings',desc:'Same accession number.',risk:'Duplicates enter DB.'},{id:'qg7',name:'Date Validations',desc:'5 date logic checks.',risk:'Date errors persist.'},{id:'qg8',name:'Null fields',desc:'Null transaction/security types.',risk:'Null values persist.'},{id:'qg9',name:'Plan Linkage',desc:'Link termination to adoption.',risk:'History lost.'}],'Exception Handling':[{id:'ex1',name:'No Section Detected',desc:'Manual review for pattern changes.',risk:'Missed filings.'},{id:'ex2',name:'Manual Processing',desc:'Full manual extraction.',risk:'Complex filings skipped.'}]},f144:{'Form 144 Tasks':[{id:'f1',name:'New Issuer/Affiliate/Broker Mapping',desc:'Map new entities or name changes.',risk:'New entities unmapped.'},{id:'f2',name:'Security Mapping',desc:'Cross-check with company financials.',risk:'Securities incorrectly mapped.'},{id:'f3',name:'Parent-Child Relationship Analysis',desc:'Deep research to determine affiliates.',risk:'Parent-child relationships missed.'},{id:'f4',name:'Insider-Issuer Relationship Validation',desc:'Verify relationship updates.',risk:'Stale relationships persist.'},{id:'f5',name:'Quality Gate Review',desc:'Assign quality flags from remarks.',risk:'Quality flags not assigned.'}]},fim:{'Butterfly Reports':[{id:'fr1',name:'MissingInsiderProperty (5 regions)',desc:'Missing properties for Canada/SEC/Israel/HK/KRX.',risk:'Property gaps undetected.'},{id:'fr2',name:'MultipleValues (5 regions)',desc:'Conflicting values across regions.',risk:'Conflicts unresolved.'},{id:'fr3',name:'MergeInsiders (5 regions)',desc:'Potential merges by property.',risk:'Merges missed.'},{id:'fr4',name:'SecMergeInsiderByCik',desc:'SEC merge by CIK.',risk:'CIK merges missed.'},{id:'fr5',name:'FactsetPotentiallyWrongMappedCompany',desc:'Wrong company mappings.',risk:'Wrong mappings persist.'},{id:'fr6',name:'InsidersWithMissingIsLegalDefinition',desc:'Missing legal definition.',risk:'Legal status unknown.'}],'Butterfly Screens':[{id:'fs1',name:'Check_Insider_merge_and_Name',desc:'Merge checks by name matching.',risk:'Name merges missed.'},{id:'fs2',name:'CheckMerge',desc:'General merge check.',risk:'Candidates not surfaced.'},{id:'fs3',name:'Missing_FIM_Mapping',desc:'Missing Factset mapping.',risk:'Unmapped insiders.'}],'Insider Quality Gates':[{id:'iq1',name:'2IQ Factset name Different',desc:'Name discrepancies.',risk:'Names unresolved.'},{id:'iq2',name:'Factset Insider missing context',desc:'Missing company link.',risk:'Context broken.'},{id:'iq3',name:'Possible demerge',desc:'One record may be two people.',risk:'Wrong merges persist.'},{id:'iq4',name:'Possible merge',desc:'Two records may be one person.',risk:'Duplicates persist.'}],'Mapping Work':[{id:'mw1',name:'Company Level Mapping',desc:'Map companies between databases.',risk:'Company mappings incomplete.'},{id:'mw2',name:'Insider Level Mapping',desc:'Deep research — bios, photos, age.',risk:'Insider mappings incomplete.'}]},sbb:{'Automated Pipeline':[{id:'ap1',name:'URL Collection Bot',desc:'Crawls source pages.',risk:'Pipeline stops.'},{id:'ap2',name:'Item 2 Extraction',desc:'Extracts Item 2 from URLs.',risk:'No extraction.'},{id:'ap3',name:'LLM Relevance Check',desc:'Checks buyback relevance.',risk:'Irrelevant content passes.'},{id:'ap4',name:'LLM Data Extraction',desc:'Extracts structured data.',risk:'No automated extraction.'},{id:'ap5',name:'Company Mapping (CIK)',desc:'Auto-map by CIK.',risk:'Mapping fails.'}],'Manual Processing':[{id:'smp1',name:'Analyst Validation',desc:'Review extracted data.',risk:'Quality drops.'},{id:'smp2',name:'Manual Company Mapping',desc:'Map when auto fails.',risk:'Unmapped accumulate.'},{id:'smp3',name:'Manual Item 2 Search',desc:'Search when bot fails.',risk:'Missed filings.'},{id:'smp4',name:'Manual Data Extraction',desc:'Full manual extraction.',risk:'Complex filings skipped.'}],'Factiva Processing':[{id:'fv1',name:'Headline Scanning',desc:'1,200 headlines daily for 30-40 intentions.',risk:'Intentions not captured.'},{id:'fv2',name:'Intention Detail Extraction',desc:'Extract amount, timeline, reason.',risk:'Details incomplete.'}],'Country Sources':[{id:'cs1',name:'USA (SEC)',desc:'97,792 trades via EDGAR.',risk:'US coverage lost.'},{id:'cs2',name:'UK (LSE)',desc:'171,887 trades.',risk:'UK coverage lost.'},{id:'cs3',name:'Japan',desc:'246,090 trades via EDINET/TDNet.',risk:'Japan coverage lost.'},{id:'cs4',name:'Other 35 Countries',desc:'Various exchanges.',risk:'Multi-market reduced.'}]},marketing:{'Content Creation':[{id:'cc1',name:'2iQ Monthly Newsletter',desc:'Monthly with metrics and insights.',risk:'Engagement drops.'},{id:'cc2',name:'CT Weekly Newsletter',desc:'Weekly politician trading.',risk:'CT engagement drops.'},{id:'cc3',name:'Blog Writing',desc:'Daily search for blog-worthy trades.',risk:'No blog content.'},{id:'cc4',name:'Buzz Content',desc:'Short-form for CT website.',risk:'CT content stales.'},{id:'cc5',name:'Politician of Week',desc:'Weekly notable politician.',risk:'Signature content lost.'}],'Social Media':[{id:'sm1',name:'2iQ X Handle',desc:'Company Twitter/X.',risk:'Social presence drops.'},{id:'sm2',name:'CT X Handle',desc:'CapitolTrades Twitter/X.',risk:'CT engagement lost.'}],'Design & Internal':[{id:'di1',name:'Canva Design',desc:'Visual design work.',risk:'Quality drops.'},{id:'di2',name:'Internal Communications',desc:'Birthdays, LinkedIn.',risk:'Culture activities stop.'}]},ct:{'Automated Systems':[{id:'as1',name:'Data Pipeline',desc:'Scrapes Senate/House disclosures.',risk:'CT data stops.'},{id:'as2',name:'Website Auto-Update',desc:'Auto-publishes trades.',risk:'Stale data shown.'}],'Manual Oversight':[{id:'mo1',name:'Data Monitoring',desc:'Huzaifa checks 15 min/day.',risk:'Issues undetected.'},{id:'mo2',name:'Data Requests',desc:'Provides data to Turra.',risk:'Content team lacks data.'}]},ssd:{'Automated Systems':[{id:'ss1',name:'Data Ingestion',desc:'Ingests from 18 EU sources.',risk:'EU data stops.'},{id:'ss2',name:'Quality Gates',desc:'Auto quality checks.',risk:'Quality issues.'}],'Manual Oversight':[{id:'so1',name:'Stuck Record Resolution',desc:'Clear unmapped records.',risk:'Records accumulate.'},{id:'so2',name:'Regulator Contact',desc:'Contact when issues arise.',risk:'Issues unresolved.'},{id:'so3',name:'QA Bridge',desc:'Coordinate analysts and IT.',risk:'Slow resolution.'}]}};
+
+const INIT_PROJECTS=[{id:'gruh',hc:6,fut:2,opp:'High',pri:1,status:'Partial',members:[{name:'Mian Jahanziab Ahmad',role:'Senior Team Lead',key:true,rec:'Retain - AI Oversight'},{name:'Javeria Tahir',role:'Supervisor',key:true,rec:''},{name:'Isma Ishfaq',role:'Level 2 Analyst',key:true,rec:''},{name:'Muzzamil Noor Butt',role:'Level 1 Analyst',key:true,rec:''},{name:'Areej Shahid',role:'Trainee',key:false,rec:''},{name:'Hassan Rasheed',role:'Trainee',key:false,rec:''}],groups:['Butterfly Screens','I-tracking','Reports','Channels','Side Tasks','Filings Manual Creation','HoneyComb']},{id:'10b51',hc:3,fut:2,opp:'Medium',pri:3,status:'LLM Exists (90%)',members:[{name:'Hannan Saleem',role:'Senior Analyst',key:false,rec:''},{name:'Mansub Niaz',role:'Senior Analyst',key:false,rec:''},{name:'Muhammad Asad',role:'Trainee',key:false,rec:''}],groups:['Mappings','Quality Gates','Exception Handling']},{id:'f144',hc:3,fut:2,opp:'Medium',pri:3,status:'Partial (as-reported auto)',members:[{name:'Muhammad Awais Nayyer',role:'Project Head',key:true,rec:'Retain - Oversight'},{name:'Yousaf Saeed',role:'Lead Analyst',key:false,rec:''},{name:'Waqas Raza Butt',role:'Supervisor',key:false,rec:''}],groups:['Form 144 Tasks']},{id:'fim',hc:5,fut:2,opp:'Medium-High',pri:2,status:'Manual',members:[{name:'Humayon Rafique',role:'Associate Unit Head',key:true,rec:'Retain'},{name:'Kashif Ali',role:'Level 3 Analyst',key:false,rec:''},{name:'Shahid Raza',role:'Level 3 Analyst',key:false,rec:''},{name:'Ali Faran',role:'Level 3 Analyst',key:false,rec:''},{name:'Nadeem Zahoor',role:'Level 3 Analyst',key:false,rec:''}],groups:['Butterfly Reports','Butterfly Screens','Insider Quality Gates','Mapping Work']},{id:'sbb',hc:6,fut:2,opp:'High',pri:1,status:'10 Sources Automated',members:[{name:'Muhammad Taimoor Waheed',role:'Project Head',key:true,rec:'Retain'},{name:'Muhammad Noor Ud Deen',role:'Lead Mentor',key:false,rec:''},{name:'Ali Raza Shah',role:'QA Analyst',key:false,rec:''},{name:'Farhan Qamar',role:'Level 2',key:false,rec:''},{name:'Umer Iftikhar',role:'Trainee',key:false,rec:''},{name:'Fahad Sohail',role:'Trainee',key:false,rec:''}],groups:['Automated Pipeline','Manual Processing','Factiva Processing','Country Sources']},{id:'marketing',hc:2,fut:1,opp:'High',pri:2,status:'Manual',members:[{name:'Turra Rasheed',role:'Manager',key:true,rec:'Retain'},{name:'Nimra Pervez',role:'Senior Officer',key:false,rec:''}],groups:['Content Creation','Social Media','Design & Internal']},{id:'ct',hc:0,fut:0,opp:'Done',pri:5,status:'Fully Automated',members:[{name:'Huzaifa (shared)',role:'15 min/day',key:false,rec:''}],groups:['Automated Systems','Manual Oversight']},{id:'ssd',hc:1,fut:1,opp:'Done',pri:5,status:'Fully Automated',members:[{name:'Muhammad Haasin Saleem',role:'Project Head',key:true,rec:'Retain'}],groups:['Automated Systems','Manual Oversight']}];
+
+const INIT_TS={bs2:{off:true,date:'2026-02-09',by:'Robert',notes:'Decisions made by Robert'},bs4:{off:true,date:'2026-02-09',by:'Robert',notes:'Decisions made by Robert'},bs5:{off:true,date:'2026-02-09',by:'Robert',notes:'Decisions made by Robert'},bs8:{off:true,date:'2026-02-09',by:'Zabih Ullah',notes:'Transferred to Jawad Khan Team'},bs9:{off:true,date:'2026-02-09',by:'Zabih Ullah',notes:'Transferred to Jawad Khan Team'},it1:{off:true,date:'2026-02-09',by:'Robert',notes:'Insider US will go but Canada will remain in i-Tracking'},rp1:{off:true,date:'2026-02-09',by:'Zabih Ullah',notes:'Double check the Matched company'},rp3:{off:true,date:'2026-02-09',by:'Robert',notes:'Decisions made by Robert'},rp5:{off:true,date:'2026-02-09',by:'Zabih Ullah',notes:'It is a duplicate of check fillings which we have decided to continue'},rp6:{off:true,date:'2026-02-09',by:'Robert',notes:'Close Robert made the decision'},rp7:{off:true,date:'2026-02-28',by:'Zabih Ullah',notes:'Decisions made based on discussions with Team Lead Jawad and shared with Robert & Dimitar.'},rp10:{off:true,date:'2026-02-09',by:'Zabih Ullah and Jawad',notes:'Another security check can perform a similar check so this will be shut down.'},ch1:{off:true,date:'2026-02-09',by:'Zabih Ullah',notes:'Decisions made based on discussions with Team Lead Jawad and shared with Robert & Dimitar.'},ch4:{off:true,date:'2026-02-09',by:'Zabih Ullah',notes:'It shows the companies not matched over the last 7, 25 etc days but almost 99.9% are duplicate'},ch6:{off:true,date:'2026-02-09',by:'Zabih Ullah',notes:'We will not add new sources until a shift to AI.'},st1:{off:true,date:'2026-02-09',by:'Zabih Ullah',notes:'Transferred to Jawad Khan Team'},st2:{off:true,date:'2026-02-09',by:'Zabih Ullah',notes:'No new sources until AI shift'},st4:{off:true,date:'2026-02-09',by:'Zabih Ullah',notes:'Cleaning up checking everything is done internal report of tasks'}};
+
+const RECS=['','Retain','Upskill','Redeploy','At Risk'];
+</script>
+<script>
+// ============================================================
+// STATE & AUTH
+// ============================================================
+let state={projects:JSON.parse(JSON.stringify(INIT_PROJECTS)),ts:JSON.parse(JSON.stringify(INIT_TS)),log:[],view:'overview',sel:'gruh',expanded:{},user:null,pass:null,syncStatus:'idle',lastSync:null,pendingLogs:[],dirty:false,projDescs:{}};
+
+function getAllItems(){const items=[];for(const groups of Object.values(TASKS))for(const arr of Object.values(groups))items.push(...arr);return items;}
+function findProject(taskId){for(const[pid,groups]of Object.entries(TASKS))for(const items of Object.values(groups))if(items.find(t=>t.id===taskId))return pid;return'';}
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+
+// ============================================================
+// API CALLS
+// ============================================================
+async function apiCall(params){
+  try{
+    // Use GET for simple reads, POST for writes
+    if(params.action==='bulkSync'){
+      const url=API_URL;
+      const body=new URLSearchParams();
+      body.append('action',params.action);
+      body.append('user',state.user||params.user||'');
+      body.append('pass',state.pass||params.pass||'');
+      body.append('payload',params.payload||'{}');
+      const r=await fetch(url,{method:'POST',body:body,redirect:'follow'});
+      const text=await r.text();
+      try{return JSON.parse(text);}catch(e2){console.error('Parse error:',text.substring(0,200));return{error:'Invalid response'};}
+    }else{
+      const url=new URL(API_URL);
+      params.user=state.user||params.user||'';
+      params.pass=state.pass||params.pass||'';
+      Object.entries(params).forEach(([k,v])=>url.searchParams.append(k,typeof v==='object'?JSON.stringify(v):String(v)));
+      const r=await fetch(url.toString(),{method:'GET',redirect:'follow'});
+      const text=await r.text();
+      try{return JSON.parse(text);}catch(e2){console.error('Parse error:',text.substring(0,200));return{error:'Invalid response'};}
+    }
+  }catch(e){
+    console.error('API error:',e);
+    return{error:e.message};
+  }
+}
+
+// ============================================================
+// LOGIN
+// ============================================================
+async function doLogin(){
+  const user=document.getElementById('login-user').value.trim();
+  const pass=document.getElementById('login-pass').value;
+  const errEl=document.getElementById('login-error');
+  if(!user||!pass){errEl.textContent='Please enter username and password';return;}
+  errEl.textContent='Connecting to server...';
+  errEl.style.color='var(--accent)';
+  document.querySelector('.login-btn').disabled=true;
+
+  try{
+    const res=await apiCall({action:'login',user,pass});
+    document.querySelector('.login-btn').disabled=false;
+    if(res.error){
+      errEl.style.color='var(--danger)';
+      errEl.textContent='Server error: '+res.error;
+      return;
+    }
+    if(res.success){
+      state.user=user;state.pass=pass;
+      localStorage.setItem('2iq-auth',JSON.stringify({user,pass}));
+      document.getElementById('login-screen').style.display='none';
+      document.getElementById('app').style.display='block';
+      await syncFromServer();
+      startAutoSync();
+      render();
+    }else{
+      errEl.style.color='var(--danger)';
+      errEl.textContent=res.error||'Invalid username or password';
+    }
+  }catch(e){
+    document.querySelector('.login-btn').disabled=false;
+    errEl.style.color='var(--danger)';
+    errEl.textContent='Connection failed: '+e.message;
+  }
+}
+
+function logout(){
+  state.user=null;state.pass=null;
+  localStorage.removeItem('2iq-auth');
+  stopAutoSync();
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('app').style.display='none';
+}
+
+// ============================================================
+// SYNC ENGINE
+// ============================================================
+let syncInterval=null;
+let isSyncing=false;
+let initialSyncDone=false;
+let lastPushCount=0;
+
+function startAutoSync(){
+  stopAutoSync();
+  syncInterval=setInterval(async()=>{
+    if(isSyncing)return;
+    if(state.pendingLogs.length>0||state.dirty){
+      await syncToServer();
+    }else{
+      await syncFromServer(true);
+    }
+  },5000);
+}
+function stopAutoSync(){if(syncInterval){clearInterval(syncInterval);syncInterval=null;}}
+
+async function syncFromServer(silent){
+  if(isSyncing)return;
+  isSyncing=true;
+  if(!silent)setSyncStatus('pending','Syncing...');
+  const res=await apiCall({action:'getData'});
+  isSyncing=false;
+  if(res.error){if(!silent)setSyncStatus('err','Sync failed');return;}
+
+  if(res.taskStatus&&Object.keys(res.taskStatus).length>0){
+    state.ts=res.taskStatus;
+  }
+  if(res.auditLog&&res.auditLog.length>0){
+    state.log=res.auditLog;
+  }
+  if(res.personnel){
+    for(const key in res.personnel){
+      const parts=key.split('_');
+      const proj=state.projects.find(p=>p.id===parts[0]);
+      if(proj&&proj.members[parseInt(parts[1])]){
+        proj.members[parseInt(parts[1])].key=res.personnel[key].key;
+        proj.members[parseInt(parts[1])].rec=res.personnel[key].rec||'';
+      }
+    }
+  }
+  state.lastSync=new Date();
+  setSyncStatus('ok','Synced');
+  render();
+  
+  if(!initialSyncDone){
+    initialSyncDone=true;
+    if(!res.taskStatus||Object.keys(res.taskStatus).length===0){
+      const allItems=getAllItems();
+      const initLogs=[];
+      for(const[id,s]of Object.entries(INIT_TS)){
+        const item=allItems.find(t=>t.id===id);
+        initLogs.push({ts:s.date+'T00:00:00Z',type:'TASK_OFF',project:'gruh',taskId:id,taskName:item?item.name:id,field:'status',oldVal:'Active',newVal:'OFF',by:s.by,notes:s.notes});
+      }
+      state.pendingLogs=initLogs;
+      state.log=[...initLogs].reverse();
+      state.dirty=true;
+      await syncToServer();
+      render();
+    }
+  }
+}
+
+async function syncToServer(){
+  if(isSyncing)return;
+  if(state.pendingLogs.length===0&&!state.dirty)return;
+  isSyncing=true;
+  setSyncStatus('pending','Saving...');
+
+  // Grab pending logs and clear them BEFORE the API call
+  const logsToSend=[...state.pendingLogs];
+  state.pendingLogs=[];
+  state.dirty=false;
+
+  const persMap={};
+  state.projects.forEach(p=>{
+    p.members.forEach((m,i)=>{
+      persMap[p.id+'_'+i]={name:m.name,role:m.role,key:m.key,rec:m.rec};
+    });
+  });
+
+  const payload={taskStatus:state.ts,personnel:persMap,newLogs:logsToSend,projDescs:state.projDescs};
+  const res=await apiCall({action:'bulkSync',payload:JSON.stringify(payload)});
+  isSyncing=false;
+
+  if(res.error){
+    // Put logs back if failed
+    state.pendingLogs=[...logsToSend,...state.pendingLogs];
+    state.dirty=true;
+    setSyncStatus('err','Save failed');
+    return;
+  }
+  state.lastSync=new Date();
+  setSyncStatus('ok','Saved');
+}
+
+async function manualSync(){
+  if(state.pendingLogs.length>0||state.dirty)await syncToServer();
+  await syncFromServer(false);
+  showToast('Synced with Google Sheet','ok');
+}
+
+function setSyncStatus(type,text){
+  state.syncStatus=type;
+  const el=document.getElementById('sync-indicator');
+  if(el){
+    el.className='sync-status sync-'+type;
+    const icon=type==='ok'?'✓':type==='err'?'✗':'⟳';
+    el.innerHTML=icon+' '+esc(text);
+  }
+}
+
+// ============================================================
+// ACTIONS (with audit logging)
+// ============================================================
+function addLogEntry(entry){
+  const full={...entry,ts:new Date().toISOString(),by:entry.by||state.user};
+  state.log.unshift(full);
+  state.pendingLogs.push(full);
+  state.dirty=true;
+}
+
+function toggleTask(id){
+  const allItems=getAllItems();
+  const item=allItems.find(t=>t.id===id);
+  const proj=findProject(id);
+  if(state.ts[id]?.off){
+    delete state.ts[id];
+    addLogEntry({type:'TASK_RESTORED',project:proj,taskId:id,taskName:item?.name||id,field:'status',oldVal:'OFF',newVal:'Active',notes:'Restored'});
+  }else{
+    state.ts[id]={off:true,date:new Date().toISOString().split('T')[0],by:'',notes:''};
+    addLogEntry({type:'TASK_OFF',project:proj,taskId:id,taskName:item?.name||id,field:'status',oldVal:'Active',newVal:'OFF',notes:''});
+  }
+  render();
+}
+
+function updateTaskField(id,field,val){
+  const old=state.ts[id]?.[field]||'';
+  if(!state.ts[id])state.ts[id]={};
+  state.ts[id][field]=val;
+  const allItems=getAllItems();
+  const item=allItems.find(t=>t.id===id);
+  addLogEntry({type:'TASK_EDIT',project:findProject(id),taskId:id,taskName:item?.name||id,field,oldVal:old,newVal:val,notes:''});
+}
+
+function updateMember(projId,idx,field,val){
+  const proj=state.projects.find(p=>p.id===projId);
+  const old=proj.members[idx][field];
+  proj.members[idx][field]=val;
+  addLogEntry({type:'PERSONNEL_EDIT',project:projId,taskId:'',taskName:proj.members[idx].name,field,oldVal:String(old),newVal:String(val),notes:''});
+  render();
+}
+
+function toggleExpand(key){state.expanded[key]=!state.expanded[key];render();}
+function setView(v){state.view=v;render();}
+function setSel(id){state.sel=id;render();}
+
+// ============================================================
+// EXCEL EXPORT
+// ============================================================
+function exportExcel(){
+  const allItems=getAllItems();
+  const logRows=state.log.map((e,i)=>({'#':state.log.length-i,Timestamp:e.ts?new Date(e.ts).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'',Type:e.type,Project:INFO[e.project]?.label||e.project,'Task/Person':e.taskName,Field:e.field,'Old Value':e.oldVal,'New Value':e.newVal,'Changed By':e.by,Notes:e.notes}));
+  const ws1=XLSX.utils.json_to_sheet(logRows);
+  ws1['!cols']=[{wch:5},{wch:22},{wch:16},{wch:14},{wch:38},{wch:10},{wch:16},{wch:16},{wch:20},{wch:50}];
+
+  const statusRows=[];
+  for(const[pid,groups]of Object.entries(TASKS))for(const[gname,items]of Object.entries(groups))for(const item of items){const st=state.ts[item.id];statusRows.push({Project:INFO[pid]?.label||pid,Group:gname,Task:item.name,Status:st?.off?'OFF':'Active','Date Off':st?.date||'','Approved By':st?.by||'',Notes:st?.notes||'','Risk If Stopped':item.risk});}
+  const ws2=XLSX.utils.json_to_sheet(statusRows);
+  ws2['!cols']=[{wch:14},{wch:22},{wch:38},{wch:8},{wch:12},{wch:20},{wch:50},{wch:40}];
+
+  const persRows=[];
+  for(const pr of state.projects)for(const m of pr.members)persRows.push({Project:INFO[pr.id]?.label||pr.id,Name:m.name,Role:m.role,'Key Person':m.key?'Yes':'No',Recommendation:m.rec||''});
+  const ws3=XLSX.utils.json_to_sheet(persRows);
+  ws3['!cols']=[{wch:14},{wch:30},{wch:22},{wch:12},{wch:20}];
+
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws1,'Audit Log');
+  XLSX.utils.book_append_sheet(wb,ws2,'Task Status');
+  XLSX.utils.book_append_sheet(wb,ws3,'Personnel');
+  
+  const descRows=state.projects.map(p=>({Project:INFO[p.id]?.label||p.id,Description:getProjDesc(p.id)}));
+  const ws4=XLSX.utils.json_to_sheet(descRows);
+  ws4['!cols']=[{wch:14},{wch:100}];
+  XLSX.utils.book_append_sheet(wb,ws4,'Project Descriptions');
+  XLSX.writeFile(wb,'2iQ_Transition_Audit_'+new Date().toISOString().split('T')[0]+'.xlsx');
+  showToast('Excel exported!','ok');
+}
+
+function showToast(msg,type){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className='toast toast-'+(type||'ok');
+  t.style.display='block';setTimeout(()=>{t.style.display='none';},2500);
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+function oppBadge(o){const c=o==='High'?'badge-high':o==='Done'?'badge-done':'badge-medium';return`<span class="badge ${c}">${esc(o)}</span>`;}
+function priBadge(p){const c=p===1?'badge-p1':p===2?'badge-p2':'badge-p3';return`<span class="badge ${c}">P${p}</span>`;}
+
+function render(){
+  if(!state.user)return;
+  const totalCur=state.projects.reduce((s,p)=>s+p.hc,0);
+  const totalFut=state.projects.reduce((s,p)=>s+p.fut,0);
+  const totalOff=Object.values(state.ts).filter(v=>v.off).length;
+  const totalTasks=getAllItems().length;
+
+  document.getElementById('subtitle').textContent=`${totalCur} staff → ${totalFut} target · ${totalOff} of ${totalTasks} functions turned off`;
+  document.getElementById('user-name').textContent=state.user;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.view===state.view));
+  document.querySelectorAll('.view-section').forEach(v=>v.classList.toggle('active',v.id==='v-'+state.view));
+
+  if(state.view==='overview')renderOverview(totalCur,totalFut,totalOff);
+  else if(state.view==='projects')renderProjects();
+  else if(state.view==='personnel')renderPersonnel();
+  else if(state.view==='audit')renderAudit();
+  else if(state.view==='roadmap')renderRoadmap();
+}
+
+function renderOverview(tc,tf,to){document.getElementById('v-overview').innerHTML=`<div class="stats"><div class="stat-card"><div class="stat-value" style="color:var(--accent)">${tc}</div><div class="stat-label">Current Staff</div></div><div class="stat-card"><div class="stat-value" style="color:var(--success)">${tf}</div><div class="stat-label">Future Target</div></div><div class="stat-card"><div class="stat-value" style="color:var(--danger)">-${tc-tf}</div><div class="stat-label">Reduction</div></div><div class="stat-card"><div class="stat-value" style="color:var(--warn)">${to}</div><div class="stat-label">Functions Off</div></div></div><div class="card"><div class="table-wrap"><table><thead><tr><th>Project</th><th style="text-align:center">Staff</th><th style="text-align:center">Future</th><th style="text-align:center">Δ</th><th>Status</th><th style="text-align:center">AI Opp</th><th style="text-align:center">Pri</th></tr></thead><tbody>${state.projects.map(p=>{const d=p.hc-p.fut;return`<tr class="clickable" onclick="setSel('${p.id}');setView('projects')"><td style="font-weight:600">${esc(INFO[p.id]?.label||p.id)}</td><td style="text-align:center">${p.hc}</td><td style="text-align:center;color:var(--success);font-weight:600">${p.fut}</td><td style="text-align:center;color:var(--danger);font-weight:500">${d>0?'-'+d:'—'}</td><td style="font-size:12px;color:var(--text-mid)">${esc(p.status)}</td><td style="text-align:center">${oppBadge(p.opp)}</td><td style="text-align:center">${priBadge(p.pri)}</td></tr>`;}).join('')}</tbody></table></div></div>`;}
+
+function getDefaultDesc(projId){
+  const descs={
+    gruh:"Team GRUH manages insider holdings data across US (SEC) and Canadian (SEDI) markets. The team operates 7 functional areas: Butterfly Screens that validate holdings completeness and detect blacklisted insiders, I-tracking for processing incoming filings, Reports for cloning holdings and matching events, Channels for RSS monitoring and bot management, Side Tasks for follow-ups and research, Filings Manual Creation for 7 smaller markets (Egypt, Spain, Estonia, Czech Republic, Bulgaria, Malta, NSX), and HoneyComb for Form 144 mapping and property management. Currently 18 of their functions have been turned off as part of the AI transition.",
+    '10b51':"The 10B5-1 team captures SEC Rule 10b5-1 trading plan disclosures including adoptions, terminations, and amendments. Their work spans 3 areas: Mappings (issuer, insider, security, and relationship mapping), Quality Gates (9 validation checks covering missing shares, transaction tags, date validations, duplicates, null fields, and plan linkage), and Exception Handling for filings that fail automated extraction. The pipeline is already ~45% AI-assisted with LLM extraction, though tagging and connection validation remain largely manual.",
+    f144:"Form 144 handles notices of proposed sale of restricted securities, processing 150-230 filings daily. The team manages 5 core tasks: mapping new issuers, affiliates and brokers; security mapping against company financials; parent-child relationship analysis requiring deep research; insider-issuer relationship validation; and quality gate review of filing remarks. The as-reported feed is automated but the curated feed still requires manual research for complex entity relationships.",
+    fim:"FIM (Factset Insider Mapping) validates the 2iQ insider database against Factset's records. The team works across 4 areas: Butterfly Reports (checking missing properties, conflicting values, and potential merges across 5 regions), Butterfly Screens (merge checks and mapping gaps), Insider Quality Gates (name discrepancies, missing context, merge/demerge decisions), and deep Mapping Work at both company and insider level requiring biographical research. Identity resolution — determining if two records are the same person — is the core challenge.",
+    sbb:"Share Buyback (SBB) collects buyback data from 38 countries with 620 daily filings. Operations cover 4 areas: an Automated Pipeline (URL collection, Item 2 extraction, LLM relevance checking and data extraction, CIK mapping), Manual Processing (analyst validation, manual mapping, search and extraction), Factiva Processing (scanning 1,200 daily headlines to find 30-40 buyback intentions), and Country Sources spanning USA, UK, Japan, and 35 other markets. 10 sources are already automated; Factiva scanning is the prime AI candidate.",
+    marketing:"Marketing handles content creation for both 2iQ and CapitolTrades brands. The team produces: monthly 2iQ newsletters, weekly CT newsletters, daily blog posts (requiring trade-worthy story identification), Buzz content for the CT website, and a weekly Politician of the Week feature. They also manage social media for both @2iQ and @CapitolTrades X handles, plus design work in Canva and internal communications. Finding blog-worthy trades is the most time-intensive task and highly automatable.",
+    ct:"CapitolTrades tracks US politician stock trades with a fully automated pipeline. The Data Pipeline scrapes Senate and House disclosures, and the website auto-publishes new trades. Manual oversight is minimal — Huzaifa monitors for 15 minutes daily and provides data to the content team. The system is essentially complete and self-running.",
+    ssd:"European Short Disclosure (SSD) tracks short selling positions across 18 EU countries. Data ingestion and quality gates are fully automated. Manual oversight involves clearing occasional stuck/unmapped records, contacting regulators when source issues arise, and Haasin serving as QA bridge between analysts and IT. This is a mature, low-maintenance operation."
+  };
+  return descs[projId]||'';
+}
+
+// Store project descriptions
+if(!state.projDescs)state.projDescs={};
+
+function getProjDesc(projId){
+  return state.projDescs[projId]||getDefaultDesc(projId);
+}
+
+function updateProjDesc(projId,val){
+  const old=state.projDescs[projId]||'';
+  state.projDescs[projId]=val;
+  addLogEntry({type:'PROJECT_EDIT',project:projId,taskId:'',taskName:INFO[projId]?.label||projId,field:'description',oldVal:old.substring(0,50)+'...',newVal:val.substring(0,50)+'...',notes:'Project description updated'});
+}
+
+function canSeeActions(){return state.user!=='Dimitar';}
+function renderProjects(){const el=document.getElementById('v-projects');const proj=state.projects.find(p=>p.id===state.sel);if(!proj)return;const info=INFO[proj.id];const pt=TASKS[proj.id]||{};const showAct=canSeeActions();const desc=getProjDesc(proj.id);let h=`<div class="proj-tabs">${state.projects.map(p=>`<button class="proj-tab ${state.sel===p.id?'active':''}" onclick="setSel('${p.id}')">${esc(INFO[p.id]?.label||p.id)}</button>`).join('')}</div><div class="card" style="margin-bottom:16px"><div style="padding:18px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><h2 style="font-size:18px;font-weight:700;margin:0">${esc(info?.label||'')}</h2>${oppBadge(proj.opp)}</div><div style="font-size:11px;color:var(--text-light);margin-bottom:4px;font-weight:500">PROJECT DESCRIPTION <span style="font-weight:400">(click to edit)</span></div><textarea onchange="updateProjDesc('${proj.id}',this.value)" style="width:100%;min-height:80px;border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-family:var(--font);font-size:12.5px;color:var(--text-mid);line-height:1.6;resize:vertical;outline:none;transition:border-color 0.2s;box-sizing:border-box" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">${esc(desc)}</textarea></div></div><div class="card" style="margin-bottom:16px"><div class="card-header"><h3>Tasks & Sub-Tasks</h3></div>`;
+  proj.groups.forEach(gn=>{const items=pt[gn]||[];const oc=items.filter(i=>state.ts[i.id]?.off).length;const key=state.sel+'|'+gn;const open=state.expanded[key];
+    h+=`<div><div class="group-header ${open?'open':''}" onclick="toggleExpand('${key}')"><span><span style="font-weight:600">${esc(gn)}</span> <span style="color:var(--text-light)">(${items.length})</span></span><span style="display:flex;align-items:center;gap:8px">${oc>0?`<span class="badge badge-off">${oc} OFF</span>`:''}<span style="color:var(--text-light);font-size:11px">${open?'▼':'▶'}</span></span></div>`;
+    if(open){h+=`<div class="group-body">`;items.forEach(item=>{const st=state.ts[item.id];const isOff=st?.off;
+      h+=`<div class="task-item ${isOff?'off':''}"><div class="task-row"><button class="task-toggle ${isOff?'off':''}" onclick="toggleTask('${item.id}')">${isOff?'✕':''}</button><div style="flex:1;min-width:0"><div class="task-name ${isOff?'off':''}">${esc(item.name)}</div><div class="task-desc">${esc(item.desc)}</div><div class="task-risk">⚠ <strong>If stopped:</strong> ${esc(item.risk)}</div></div></div>`;
+      if(isOff){h+=`<div class="task-details"><div class="field-row"><label>Date: <input type="date" value="${esc(st?.date||'')}" onchange="updateTaskField('${item.id}','date',this.value)"></label><label style="flex:1;min-width:150px">Approved by: <input type="text" value="${esc(st?.by||'')}" onchange="updateTaskField('${item.id}','by',this.value)" placeholder="Name" style="flex:1;width:100%"></label></div><label>Notes:<textarea onchange="updateTaskField('${item.id}','notes',this.value)" placeholder="Reason and expected impact">${esc(st?.notes||'')}</textarea></label></div>`;}
+      h+=`</div>`;});h+=`</div>`;}h+=`</div>`;});
+  h+=`</div><div class="card"><div class="card-header"><h3>Team (${proj.members.length})</h3></div><div class="table-wrap"><table><thead><tr><th>Name</th><th>Role</th><th style="text-align:center">Key Person</th>${showAct?'<th>Action</th>':''}</tr></thead><tbody>`;
+  proj.members.forEach((m,i)=>{h+=`<tr class="${m.key?'key-row':''}"><td style="font-weight:500">${esc(m.name)}</td><td style="color:var(--text-mid)">${esc(m.role)}</td><td style="text-align:center"><input type="checkbox" ${m.key?'checked':''} ${showAct?'':`disabled`} onchange="updateMember('${proj.id}',${i},'key',this.checked)"></td>${showAct?`<td><select onchange="updateMember('${proj.id}',${i},'rec',this.value)">${RECS.map(r=>`<option value="${esc(r)}" ${m.rec===r?'selected':''}>${r||'Select...'}</option>`).join('')}</select></td>`:''}</tr>`;});
+  h+=`</tbody></table></div></div>`;el.innerHTML=h;}
+
+function renderPersonnel(){const el=document.getElementById('v-personnel');const showAct=canSeeActions();let h=`<div class="card"><div class="card-header"><h3>All Personnel (${state.projects.reduce((s,p)=>s+p.members.length,0)} members)</h3></div><div class="table-wrap"><table><thead><tr><th>Name</th><th>Project</th><th>Role</th><th style="text-align:center">Key</th>${showAct?'<th>Recommendation</th>':''}</tr></thead><tbody>`;
+  state.projects.forEach(p=>{p.members.forEach((m,i)=>{h+=`<tr class="${m.key?'key-row':''}"><td style="font-weight:500">${esc(m.name)}</td><td><span class="badge badge-done">${esc(INFO[p.id]?.label||p.id)}</span></td><td style="color:var(--text-mid)">${esc(m.role)}</td><td style="text-align:center"><input type="checkbox" ${m.key?'checked':''} ${showAct?'':`disabled`} onchange="updateMember('${p.id}',${i},'key',this.checked)"></td>${showAct?`<td><select onchange="updateMember('${p.id}',${i},'rec',this.value)">${RECS.map(r=>`<option value="${esc(r)}" ${m.rec===r?'selected':''}>${r||'Select...'}</option>`).join('')}</select></td>`:''}</tr>`;});});
+  h+=`</tbody></table></div></div>`;el.innerHTML=h;}
+
+function renderAudit(){const el=document.getElementById('v-audit');let h=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px"><div><h2 style="font-size:18px;font-weight:700;margin:0">Audit Log</h2><p style="margin:2px 0 0;color:var(--text-light);font-size:12px">${state.log.length} entries · Every change is recorded with user identity</p></div><button class="hdr-btn" onclick="exportExcel()" style="background:var(--accent-light);color:var(--accent);border-color:var(--accent)">📊 Export to Excel</button></div><div class="card"><div class="table-wrap"><table><thead style="background:#f8fafc"><tr><th>#</th><th>Timestamp</th><th>Type</th><th>Project</th><th>Task/Person</th><th>Field</th><th>Old</th><th>New</th><th>By</th><th>Notes</th></tr></thead><tbody>`;
+  if(!state.log.length)h+=`<tr><td colspan="10" style="padding:40px;text-align:center;color:var(--text-light)">No changes recorded yet.</td></tr>`;
+  else state.log.slice(0,200).forEach((e,i)=>{const cls=e.type.includes('OFF')?'audit-off':e.type.includes('RESTORE')?'audit-restore':'audit-edit';
+    h+=`<tr><td style="color:var(--text-light);font-size:11px">${state.log.length-i}</td><td style="font-size:11px;white-space:nowrap;color:var(--text-mid)">${e.ts?new Date(e.ts).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}):''}</td><td><span class="${cls}">${esc(e.type.replace(/_/g,' '))}</span></td><td style="font-size:12px">${esc(INFO[e.project]?.label||e.project)}</td><td style="font-size:12px;font-weight:500;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(e.taskName)}</td><td style="font-size:11px;color:var(--text-mid)">${esc(e.field)}</td><td style="font-size:11px;color:var(--text-light)">${esc(e.oldVal)}</td><td style="font-size:11px;font-weight:500">${esc(e.newVal)}</td><td style="font-size:12px;font-weight:500;color:var(--accent)">${esc(e.by)}</td><td style="font-size:11px;color:var(--text-mid);max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(e.notes)}">${esc(e.notes)}</td></tr>`;});
+  h+=`</tbody></table></div></div>`;el.innerHTML=h;}
+
+function renderRoadmap(){document.getElementById('v-roadmap').innerHTML=`<div class="card" style="margin-bottom:16px"><div class="card-body"><h2 style="font-size:18px;font-weight:700;margin:0 0 16px">Implementation Roadmap</h2><div class="phase" style="border-color:var(--danger)"><div class="phase-title" style="color:var(--danger)">Phase 1: Q1 2025 — Quick Wins</div><div class="phase-desc">GRUH: Automate screens/reports → 6→4 · SBB: Factiva AI → 6→4 · Marketing: Trade spotting → 2→1</div></div><div class="phase" style="border-color:var(--warn)"><div class="phase-title" style="color:var(--warn)">Phase 2: Q2 2025 — Optimization</div><div class="phase-desc">10B5-1: Improve LLM → 3→2 · Form 144: Automate mappings → 3→2 · FIM: AI-assisted → 5→3</div></div><div class="phase" style="border-color:var(--success)"><div class="phase-title" style="color:var(--success)">Phase 3: Q3-Q4 2025 — Refinement</div><div class="phase-desc">Final optimization across all projects → Target 12 total headcount</div></div></div></div><div class="card"><div class="card-header"><h3>Headcount Trajectory</h3></div><div class="table-wrap"><table><thead><tr><th>Project</th><th style="text-align:center">Now</th><th style="text-align:center">Q1</th><th style="text-align:center">Q2</th><th style="text-align:center">Q4 Target</th></tr></thead><tbody>${[['GRUH',6,4,3,2],['10B5-1',3,3,2,2],['Form 144',3,3,2,2],['FIM',5,5,3,2],['SBB',6,4,3,2],['Marketing',2,1,1,1],['CT+SSD',1,1,1,1]].map(([n,...nums])=>`<tr><td style="font-weight:500">${n}</td>${nums.map((v,i)=>`<td style="text-align:center;${i===3?'color:var(--success);font-weight:700':''}">${v}</td>`).join('')}</tr>`).join('')}<tr style="border-top:2px solid var(--border);background:#f8fafc"><td style="font-weight:700">TOTAL</td>${[26,21,15,12].map((v,i)=>`<td style="text-align:center;font-weight:700;${i===3?'color:var(--success)':''}">${v}</td>`).join('')}</tr></tbody></table></div></div>`;}
+
+// ============================================================
+// INIT
+// ============================================================
+window.addEventListener('DOMContentLoaded',()=>{
+  try{
+    const saved=JSON.parse(localStorage.getItem('2iq-auth'));
+    if(saved?.user&&saved?.pass){
+      state.user=saved.user;state.pass=saved.pass;
+      document.getElementById('login-screen').style.display='none';
+      document.getElementById('app').style.display='block';
+      render();
+      syncFromServer(false).then(()=>{startAutoSync();});
+    }
+  }catch(e){}
+  document.getElementById('login-pass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+});
+</script>
+
+<!-- ============================================================ -->
+<!-- HTML STRUCTURE -->
+<!-- ============================================================ -->
+<div id="toast" class="toast" style="display:none"></div>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen" class="login-overlay">
+  <div class="login-box">
+    <h1>2iQ Transition Dashboard</h1>
+    <div class="sub">Authorized access only. Log in to continue.</div>
+    <label>Username</label>
+    <input type="text" id="login-user" placeholder="Enter your name" autocomplete="username">
+    <label>Password</label>
+    <input type="password" id="login-pass" placeholder="Enter password" autocomplete="current-password">
+    <button class="login-btn" onclick="doLogin()">Sign In</button>
+    <div id="login-error" class="login-error"></div>
+  </div>
+</div>
+
+<!-- MAIN APP (hidden until login) -->
+<div id="app" style="display:none">
+  <div class="header">
+    <div class="header-top">
+      <div>
+        <h1>2iQ AI Transition Dashboard</h1>
+        <div id="subtitle" class="subtitle"></div>
+      </div>
+      <div class="header-actions">
+        <div id="sync-indicator" class="sync-status sync-ok">✓ Synced</div>
+        <button class="hdr-btn" onclick="manualSync()">🔄 Sync Now</button>
+        <button class="hdr-btn" onclick="exportExcel()">📊 Export Excel</button>
+        <div class="user-badge">👤 <span id="user-name"></span></div>
+        <button class="hdr-btn" onclick="logout()" style="border-color:rgba(255,255,255,0.15)">Logout</button>
+      </div>
+    </div>
+    <div class="tabs">
+      <button class="tab" data-view="overview" onclick="setView('overview')">📋 Overview</button>
+      <button class="tab" data-view="projects" onclick="setView('projects')">📁 Projects</button>
+      <button class="tab" data-view="personnel" onclick="setView('personnel')">👥 Personnel</button>
+      <button class="tab" data-view="audit" onclick="setView('audit')">📝 Audit Log</button>
+      <button class="tab" data-view="roadmap" onclick="setView('roadmap')">🗺️ Roadmap</button>
+    </div>
+  </div>
+  <div class="main">
+    <div id="v-overview" class="view-section"></div>
+    <div id="v-projects" class="view-section"></div>
+    <div id="v-personnel" class="view-section"></div>
+    <div id="v-audit" class="view-section"></div>
+    <div id="v-roadmap" class="view-section"></div>
+  </div>
+</div>
+</body>
+</html>
